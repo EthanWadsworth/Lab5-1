@@ -123,7 +123,7 @@ resetBtn.addEventListener('click', () => {
 // voice synthesis
 function populateVoiceDropdown() {
   voices = synth.getVoices();
-  console.log(voices);
+  document.querySelector('option[value="none"]').textContent = "Default";
 
   for(var i = 0; i < voices.length ; i++) {
     var option = document.createElement('option');

@@ -5,8 +5,8 @@
 
 ## Part 1:
 
-LINK TO YOUR PUBLISHED SITE
+Site Link: https://ethanwadsworth.github.io/Lab5-1/
 
 ## Part 2:
 
-LINK TO YOUR PART 2 REPOSITORY
+Github Actions CI: https://github.com/EthanWadsworth/github-actions-for-ci/issues/4
