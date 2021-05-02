@@ -24,7 +24,6 @@ const fileStore = document.getElementById('image-input'); // variable reference 
 
 // handles waiting for a file to be added to reset the canvas
 fileStore.addEventListener('change', () => {
-  console.log(fileStore.files);
   img.src = URL.createObjectURL(fileStore.files[0]);
 });
 
