@@ -1,8 +1,24 @@
 // script.js
 
-console.log('opened');
-const CANVAS_WIDTH = 400;
-const CANVAS_HEIGHT = 400;
+// variables for speech snythesis
+var synth = window.speechSynthesis;
+var voices = [];
+var voiceSelector = document.getElementById('voice-selection');
+
+// text fields 
+var bottomText = document.getElementById('text-bottom');
+var topText = document.getElementById('text-top');
+
+var volumeSlider = document.querySelector('input[type="range"]'); // slider for volumen control
+
+const resetBtn = document.querySelector('button[type="reset"]'); // clear button
+const readTxtBtn = document.querySelector('button[type="button"]'); // read text button
+const generateBtn = document.querySelector('button[type="submit"]'); // form submit button
+
+// set up canvas
+const canvas = document.getElementById('user-image');
+const ctx = canvas.getContext('2d');
+
 const img = new Image(); // used to load image from <input> and draw to canvas
 const fileStore = document.getElementById('image-input'); // variable reference to input file tag
 
@@ -14,20 +30,17 @@ fileStore.addEventListener('change', () => {
 
 // Fires whenever the img object loads a new image (such as with img.src =)
 img.addEventListener('load', () => {
-  // TODO
-  const canvas = document.getElementById('user-image');
-  const ctx = canvas.getContext('2d');
+  // clear the canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // make the canvas with black
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  // draw image and then draw text
   const dimensions = getDimmensions(canvas.width, canvas.height, img.width, img.height);
   ctx.drawImage(img, dimensions.startX, dimensions.startY, dimensions.width, dimensions.height);
-
-  // console.log(filestore.files);
-  // img.src = URL.createObjectURL(filestore.files[0]);
-
+  drawText();
 
   // Some helpful tips:
   // - Fill the whole Canvas with black first to add borders on non-square images, then draw on top
@@ -75,14 +88,95 @@ function getDimmensions(canvasWidth, canvasHeight, imageWidth, imageHeight) {
   return { 'width': width, 'height': height, 'startX': startX, 'startY': startY }
 }
 
-// testing out getting canvas to work and text input events
-let bottomText = document.getElementById('text-bottom');
-let topText = document.getElementById('text-top');
+// test update on form submission
+const form = document.getElementById('generate-meme');
 
-bottomText.addEventListener('change', () => {
-  console.log(bottomText.value);
-  // const canvas = document.getElementById('user-image');
-  // const ctx = canvas.getContext('2d');
-  // ctx.fillStyle = 'black';
-  // ctx.fillRect(0, 0, 400, 400);
-})
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  resetBtn.disabled = false;
+  readTxtBtn.disabled = false;
+  generateBtn.disabled = true;
+
+  voiceSelector.disabled = false;
+
+  drawText();
+});
+
+// draw text on canvas
+function drawText() {
+  ctx.font = "40px Impact";
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  ctx.fillText(topText.value.toUpperCase(), canvas.width/2, 40);
+  ctx.fillText(bottomText.value.toUpperCase(), canvas.width/2, canvas.height - 20);
+}
+
+// test reset initial status on clear button pressed
+resetBtn.addEventListener('click', () => {
+  resetBtn.disabled = true;
+  readTxtBtn.disabled = true;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  generateBtn.disabled = false;
+});
+
+// voice synthesis
+function populateVoiceDropdown() {
+  voices = synth.getVoices();
+  console.log(voices);
+
+  for(var i = 0; i < voices.length ; i++) {
+    var option = document.createElement('option');
+    option.textContent = voices[i].name + ' (' + voices[i].lang + ')';
+
+    if(voices[i].default) {
+      option.textContent += ' -- DEFAULT';
+    }
+
+    option.setAttribute('data-lang', voices[i].lang);
+    option.setAttribute('data-name', voices[i].name);
+    voiceSelector.appendChild(option);
+  }
+}
+
+// filling voice-selection dropdown
+populateVoiceDropdown();
+if (speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = populateVoiceDropdown;
+}
+
+// speech synthesis read meme
+
+// change volume icon on change to slider value
+volumeSlider.addEventListener('change', () => {
+  let volumeIcon = document.querySelector('img');
+
+  if (volumeSlider.value >= 67) {
+    volumeIcon.src = 'icons/volume-level-3.svg';
+  }
+  else if (volumeSlider.value >= 34) {
+    volumeIcon.src = 'icons/volume-level-2.svg';
+  }
+  else if (volumeSlider.value >= 1) {
+    volumeIcon.src = 'icons/volume-level-1.svg';
+  }
+  else {
+    volumeIcon.src = 'icons/volume-level-0.svg';
+  }
+});
+
+// start reading text on read text clicked
+readTxtBtn.addEventListener('click', () => {
+  let speechInput = topText.value + ' ' + bottomText.value;
+  let utterThis = new SpeechSynthesisUtterance(speechInput);
+  let selectedOption = voiceSelector.selectedOptions[0].getAttribute('data-name');
+
+  for(var i = 0; i < voices.length ; i++) {
+    if(voices[i].name === selectedOption) {
+      utterThis.voice = voices[i];
+    }
+  }
+
+  utterThis.volume = Number(volumeSlider.value)/100;
+  synth.speak(utterThis);
+});
